@@ -1,0 +1,44 @@
+-- /***
+-- *** Requester Name:  Priyanshu Kumar
+-- *** Purpose : Drop scripts for Tables Sk_Industry;
+-- *** Schema  : atgcore
+-- *** Date of Request : 18/04/2017
+-- ***/ --
+
+--Droping New table Sk_Industry
+
+-- Dropping coulmn TAX_ID from User Table 
+ALTER TABLE SK_DPS_USER drop column TAX_ID;
+ALTER TABLE SK_DPS_USER drop column USER_AGREE_TERM_CONDITION;
+ALTER TABLE SK_DPS_USER drop column USER_AGREE_OFFER_MARKET_TERMS;
+
+-- Dropping property industry from organization Table 
+ALTER TABLE SK_DPS_ORGANIZATION drop column INDUSTRY;
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column EMAIL ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column TAX_ID ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column INDUSTRY ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column PHN_NUM ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column CUST_NUM ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column COMPANY_NAME ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column ADDR_1 ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column ADDR_2 ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column CITY ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column ZIP_CODE ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column COUNTRY ;
+
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column STATE ;
+ALTER TABLE SK_ADMIN_COMMERCE_REQUEST drop column TIMEZONE ;
+
+DROP TABLE SK_INDUSTRY;
+
+commit;

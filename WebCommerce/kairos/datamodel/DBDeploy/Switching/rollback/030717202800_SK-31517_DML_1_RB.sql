@@ -1,0 +1,3 @@
+Insert into sk_label (ID,KEY,MESSAGE,LANGUAGE_CODE,REGION_CODE,CHANNEL) values ('Lbl_contact_msg_receive_email_de_AT_MOBILE','Lbl_contact_msg_receive_email','Bestätigungs-E-Mail für diese Anfrage erhalten','de','AT','MOBILE');
+Insert into sk_label (ID,KEY,MESSAGE,LANGUAGE_CODE,REGION_CODE,CHANNEL) values ('Lbl_contact_msg_receive_email_de_DE_MOBILE','Lbl_contact_msg_receive_email','Bestätigungs-E-Mail für diese Anfrage erhalten','de','DE','MOBILE');
+commit;

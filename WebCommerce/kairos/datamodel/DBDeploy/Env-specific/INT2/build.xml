@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Siemens_dbdeploy" default="update-database-and-apply-as-separate-step">
+
+	<tstamp>
+        <format property="current.time" pattern="yyyy-MM-dd-HH-mm-ss"/>
+    </tstamp>
+
+	<property file="./build_${env}.properties"/>
+	<property name="lib.dir" value="./lib"/>
+	
+	<!-- Define the sources dir -->
+    <property name="src" value="."/>
+	<!-- Define the db driver -->
+	<taskdef name="if" classname="ise.antelope.tasks.IfTask" classpath="./lib/atg-ant.jar" />
+	<taskdef name="else" classname="ise.antelope.tasks.ElseTask" classpath="./lib/atg-ant.jar" />
+    <property name="db.driver" value="oracle.jdbc.OracleDriver"/>
+
+    <!-- Define the url to the database -->
+	<if name="db.Oracle" value="true">
+			<property name="db.url" value="jdbc:oracle:thin:@${db.host}:${db.port}:${db.name}"/>
+		<else>
+			<property name="db.url" value="jdbc:oracle:thin:@${db.host}:${db.port}/${db.name}"/>
+		</else>
+		</if>
+    <property name="db.url" value="jdbc:oracle:thin:@${db.host}:${db.port}:${db.name}"/>
+
+    <!-- Define the target DBMS -->
+    <property name="db.dbms" value="ora"/>
+
+   
+    <!-- these two filenames will contain the generated SQL to do the deploy and roll it back-->
+    <property name="build.dbdeploy.deployfile" value="deploy-${current.time}.sql"/>
+    <property name="build.dbdeploy.undofile" value="undo-${current.time}.sql"/>
+
+    <property name="use-verbose" value="false"/>
+
+    <!-- Define the classpath for the db driver -->
+    <path id="classpath">
+    <fileset dir="${lib.dir}" includes="ojdbc6.jar"/>
+	<fileset dir="${lib.dir}" includes="dbdeploy-ant-*.jar"/>
+    </path>
+
+    <!-- Declare the dbdeploy task -->
+    <taskdef name="dbdeploy" classname="com.dbdeploy.AntTarget" classpathref="classpath"/>
+
+
+    <target name="update-database" description="generate a sql upgrade script">
+
+<!--        if you don't specify an output file, dbdeploy will apply the changes for you
+
+        you may need to specify delimiter and delimitertype for your scripts to be split properly - these
+         work the same as in the ant sql task, see http://ant.apache.org/manual/CoreTasks/sql.html
+    -->    
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.core.user}"
+                  password="${db.core.pass}"
+                  dir="./Core/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg.user}"
+                  password="${db.stg.pass}"
+                  dir="./Core/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.pub.user}"
+                  password="${db.pub.pass}"
+                  dir="./Pub/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.cat_a.user}"
+                  password="${db.cat_a.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.cat_b.user}"
+                  password="${db.cat_b.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+				<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg_cat_a.user}"
+                  password="${db.stg_cat_a.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg_cat_b.user}"
+                  password="${db.stg_cat_b.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="changelog_${env}"
+                />
+	</target>
+    
+    <target name="update-database-and-apply-as-separate-step" description="generate a sql upgrade script">
+
+		<!--PUB-->
+		<move todir="./Pub/rollforward" includeemptydirs="false">
+			<fileset dir="./Pub/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="11*"/>
+		</move>
+		<dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.pub.user}"
+                  password="${db.pub.pass}"
+                  dir="./Pub/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_pub.sql"
+                  undoOutputfile="undo_pub.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_pub.sql" replacefilterfile="tokens_dt.properties"/-->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.pub.user}" password="${db.pub.pass}" 
+			 classpathref="classpath">
+            <fileset file="output_pub.sql"/>	
+        </sql>
+		<move todir="./Pub/rollforward" includeemptydirs="false">
+			<fileset dir="./Pub/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="11*" to="*"/>
+		</move>
+		
+		<!--CORE-->
+		<move todir="./Core/rollforward" includeemptydirs="false">
+			<fileset dir="./Core/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="10*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.core.user}"
+                  password="${db.core.pass}"
+                  dir="./Core/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_core.sql"
+                  undoOutputfile="undo_core.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_core.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.core.user}" password="${db.core.pass}" classpathref="classpath">
+            <fileset file="output_core.sql"/>
+        </sql>
+		<move todir="./Core/rollforward" includeemptydirs="false">
+			<fileset dir="./Core/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="10*" to="*"/>
+		</move>
+		
+		<!--STAGING-->
+		<move todir="./Core/rollforward" includeemptydirs="false">
+			<fileset dir="./Core/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="12*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg.user}"
+                  password="${db.stg.pass}"
+                  dir="./Core/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_stg.sql"
+                  undoOutputfile="undo_stg.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_stg.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.stg.user}" password="${db.stg.pass}" classpathref="classpath">
+            <fileset file="output_stg.sql"/>
+        </sql>
+		<move todir="./Core/rollforward" includeemptydirs="false">
+			<fileset dir="./Core/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="12*" to="*"/>
+		</move>
+		
+		<!--CAT_A-->
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="13*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.cat_a.user}"
+                  password="${db.cat_a.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_cat_a.sql"
+                  undoOutputfile="undo_cat_a.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_cat_a.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.cat_a.user}" password="${db.cat_a.pass}" classpathref="classpath">
+            <fileset file="output_cat_a.sql"/>
+        </sql>
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="13*" to="*"/>
+		</move>
+		
+		<!--CAT_B-->
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="14*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.cat_b.user}"
+                  password="${db.cat_b.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_cat_b.sql"
+                  undoOutputfile="undo_cat_b.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_cat_b.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.cat_b.user}" password="${db.cat_b.pass}" classpathref="classpath">
+            <fileset file="output_cat_b.sql"/>
+        </sql>
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="14*" to="*"/>
+		</move>
+		<!--STG_CAT_A-->
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="15*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg_cat_a.user}"
+                  password="${db.stg_cat_a.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_stg_cat_a.sql"
+                  undoOutputfile="undo_stg_cat_a.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_stg_cat_a.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.stg_cat_a.user}" password="${db.stg_cat_a.pass}" classpathref="classpath">
+            <fileset file="output_stg_cat_a.sql"/>
+        </sql>
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="15*" to="*"/>
+		</move>
+		
+		<!--STG_CAT_B-->
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="*" to="16*"/>
+		</move>
+        <dbdeploy driver="${db.driver}" url="${db.url}"
+                  userid="${db.stg_cat_b.user}"
+                  password="${db.stg_cat_b.pass}"
+                  dir="./Switching/rollforward"
+				  changeLogTableName="DBCR.changelog_${env}"
+                  outputfile="output_stg_cat_b.sql"
+                  undoOutputfile="undo_stg_cat_b.sql"
+				  templatedir="./template"
+                  dbms="ora"
+                />
+		<!--replace file="output_stg_cat_b.sql" replacefilterfile="tokens_dt.properties"/-->
+        <!-- now apply the changescript to the database -->
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.stg_cat_b.user}" password="${db.stg_cat_b.pass}" classpathref="classpath">
+            <fileset file="output_stg_cat_b.sql"/>
+        </sql>
+		<move todir="./Switching/rollforward" includeemptydirs="false">
+			<fileset dir="./Switching/rollforward">
+			  <include name="**/*.sql"/>
+			</fileset>
+			<mapper type="glob" from="16*" to="*"/>
+		</move>
+	</target>
+
+    <target name="dump-tables">
+        <sql driver="${db.driver}" url="${db.url}"
+             userid="${db.user}" password="${db.pass}" print="true" classpathref="classpath">
+            select * from changelog_${env};
+        </sql>
+    </target>
+
+    
+</project>

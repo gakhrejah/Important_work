@@ -1,0 +1,1 @@
+alter table sk_product drop(default_category);

@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="KAIROS" default="sonar" basedir="." xmlns:sonar="antlib:org.sonar.ant">
+	<property environment="env" />
+	
+	<property file="${user.name}-${servername}.properties" />
+    	
+	
+	<!-- Define an if and else task for use in this definition -->
+	<taskdef name="if" classname="ise.antelope.tasks.IfTask" classpath="./build_lib/atg/atg-ant.jar" />
+	<taskdef name="else" classname="ise.antelope.tasks.ElseTask" classpath="./build_lib/atg/atg-ant.jar" />
+	
+	<if name="servername" value="prod" >
+		<property file="kairos_prod_${env}_weblogic.properties" />
+		<echo message="Server Name passed is ${dynamo.server.name}" level="info" />
+		<echo message="Modules list used for build..... ${include.modules}" level="info" />
+		<echo message="Weblogic server name is ${weblogic.server}" level="info" />
+	</if>
+	
+	<if name="servername" value="pub" >
+		<property file="kairos_pub_${env}_weblogic.properties" />
+		<echo message="Server Name passed is ${dynamo.server.name}" level="info" />
+		<echo message="Weblogic server name is ${weblogic.server}" level="info" />
+	</if>
+	
+	<if name="servername" value="stg" >
+		<property file="kairos_stg_${env}_weblogic.properties" />
+		<echo message="Server Name passed is ${dynamo.server.name}" level="info" />
+		<echo message="Modules list used for build..... ${include.modules}" level="info" />
+		<echo message="Weblogic server name is ${weblogic.server}" level="info" />
+	</if>	
+	
+	<if name="servername" value="sso" >
+		<property file="kairos_sso_${env}_weblogic.properties" />
+		<echo message="Server Name passed is ${dynamo.server.name}" level="info" />
+		<echo message="Modules list used for build..... ${include.modules}" level="info" />
+		<echo message="Weblogic server name is ${weblogic.server}" level="info" />
+	</if>
+
+	<!-- The dynamo class path -->
+	<path id="dynamo.classpath">
+		<fileset dir="${dynamo.root.dir}/DAS/lib">
+			<include name="**/*.jar" />
+			<exclude name="**/groovy-all-1.7.2.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAS-UI/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DPS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DSS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DCS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/NucleusBrowser/atglib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<!-- Initializes the build.  This target is not public, but should be called by all the others.	-->
+	<target name="-init">
+		<!-- Create the timestamp -->
+		<tstamp />
+		<echo message="" />
+		<echo message="" />
+		<echo message="#############################################################################" />
+		<echo message="#############################################################################" />
+		<echo message="${module.name}: start date = ${DSTAMP}  start time = ${TSTAMP}" />
+		<echo message="JAVA_HOME       = ${JAVA_HOME}" />
+		<echo message="dynamo.home     = ${dynamo.home}" />
+		<echo message="dynamo.root.dir = ${dynamo.root.dir}" />
+		<echo message="weblogic.home      = ${weblogic.home}" />
+		<echo message="#############################################################################" />
+		<echo message="#############################################################################" />
+		<echo message="" />
+		<echo message="" />
+		<if name="localBuild" value="true">
+			<property name="cobertura.path" value="${build.root.dir}/datafile" />
+			<property name="build.path" value="${dynamo.root.dir}/KAIROS" />
+			<else>
+				<property name="cobertura.path" value="${basedir}/../datafile" />
+				<property name="build.path" value="${basedir}/../modules" />
+			</else>
+		</if>
+		
+	</target>
+	
+	<path id="cobertura.classpath">
+		<fileset dir="./build_lib/cobertura">
+			<include name="*.jar" />
+			<include name="lib/**/*.jar" />
+		</fileset>
+	</path>
+	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+	
+	
+	<target name="base-instrument" >
+		<delete dir="${cobertura.path}" />
+		<mkdir dir="${cobertura.path}" />
+		<delete>
+			<fileset dir="./../reports/coverage/" includes="**/*.xml"/>
+		</delete>
+		<delete>
+			<fileset dir="./../reports/junit/" includes="**/*.xml"/>
+		</delete>
+		<!-- Instrument the application classes, writing the instrumented classes -->
+		<cobertura-instrument datafile="${cobertura.path}/cobertura.ser" />
+	</target>
+	
+	<target name="coverage-report">
+		<echo message="Cobertura Path : ${cobertura.path}/cobertura.ser" />
+		<cobertura-report datafile="${cobertura.path}/cobertura.ser" destdir="${basedir}/../reports/coverage/xml" format="xml" >
+			<fileset dir="${build.path}/base/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/siteManagement/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/profile/src" includes="**/*.java" excludes="**/*VO.java" />
+            <fileset dir="${build.path}/wcs/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/services/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/administration/profile/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/experience/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/atp/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/orderTracker/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/orderHistory/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/atpService/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/common/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/core/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/atp/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/pricing/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/quote/order/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/quote/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/purchase/src" includes="**/*.java" excludes="**/*VO.java" />			
+			<fileset dir="${build.path}/commerce/elop/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/personalization/src" includes="**/*.java" excludes="**/*VO.java" />			
+			<fileset dir="${build.path}/personalization/history/src" includes="**/*.java" excludes="**/*VO.java" />	
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*KairosChildCategoriesDerivation.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*DisabledChildCategoriesDerivation.java"/>
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*CatalogRegionalDerivation.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryNodePropertyAccessor.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomConfigImportDocumentSubmitter.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomIndexingConfigImporter.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemPanel.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemLink.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessorBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*SearchHistoryPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryMultiLanguagePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryCatalogAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryPathAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryRegionAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSRenditionTextPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessorHelperBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsRefinementMenuHandler.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*EndecaCatalogRepositoryHelper.java" />	
+			<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/" />	
+			<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/atp/beans/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/" />
+			<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/" />
+			<exclude name="${build.path}/experience/src/com/kairos/view/bean/" />		
+		</cobertura-report>
+	</target>
+	
+	 <!-- This target call post selenium test, it has the dependency in -init target, so added an extra target which is called explicitly -->
+	 <target name="coverage-report-xml" depends="-init">
+		<echo message="Cobertura Path : ${cobertura.path}/cobertura.ser" />
+		<cobertura-report datafile="${cobertura.path}/cobertura.ser" destdir="${basedir}/../reports/coverage/xml" format="xml" >
+			<fileset dir="${build.path}/base/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/siteManagement/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/profile/src" includes="**/*.java" excludes="**/*VO.java" />
+            <fileset dir="${build.path}/wcs/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/services/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/administration/profile/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/experience/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/atp/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/orderTracker/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/orderHistory/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/atpService/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/integration/common/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/core/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/atp/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/pricing/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/quote/order/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/quote/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/commerce/purchase/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/personalization/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}/personalization/history/src" includes="**/*.java" excludes="**/*VO.java" />
+			<fileset dir="${build.path}" excludes="**/GenericPropertyAccessorHelper.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSCategoryNodePropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/TechSpecsGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSCategoryMultiLanguagePropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSWCSCategoryCatalogAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/GenericPropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSWCSCategoryPathAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSWCSCategoryPropertyMapAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSWCSCategoryRegionAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSWCSRenditionTextPropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}" excludes="**/KAIROSSetSites.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*KairosChildCategoriesDerivation.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*DisabledChildCategoriesDerivation.java"/>
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*CatalogRegionalDerivation.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryNodePropertyAccessor.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomConfigImportDocumentSubmitter.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomIndexingConfigImporter.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemPanel.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemLink.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessorBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*SearchHistoryPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryMultiLanguagePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryCatalogAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryPathAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryRegionAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSRenditionTextPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessorHelperBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsRefinementMenuHandler.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*EndecaCatalogRepositoryHelper.java" />
+			<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/" />	
+			<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/atp/beans/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/" />
+			<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/" />
+			<exclude name="${build.path}/experience/src/com/kairos/view/bean/" />
+		</cobertura-report>
+	</target>
+
+	
+	<target name="alternate-coverage-report" depends="-init">
+		<!--
+			Generate a series of HTML files containing the coverage
+			data in a user-readable form using nested source filesets.
+		-->
+		<delete dir="${build.root.dir}/reports/html" />
+		<mkdir dir="${build.root.dir}/reports/html" />
+		<echo message="Cobertura Path : ${cobertura.path}/cobertura.ser" />
+		<cobertura-report datafile="${cobertura.path}/cobertura.ser" destdir="${basedir}/../reports/html" >
+
+			<fileset dir="${build.path}/base/src" includes="**/*.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" />
+			<fileset dir="${build.path}/siteManagement/src" includes="**/*.java" />
+			<fileset dir="${build.path}/profile/src" includes="**/*.java" />
+			<fileset dir="${build.path}/services/src" includes="**/*.java" />
+			<fileset dir="${build.path}/administration/profile/src" includes="**/*.java" />
+			<fileset dir="${build.path}/experience/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/core/src" includes="**/*.java" />
+			<fileset dir="${build.path}/integration/atp/src" includes="**/*.java" />
+			<fileset dir="${build.path}/integration/orderTracker/src" includes="**/*.java" />
+			<fileset dir="${build.path}/orderHistory/src" includes="**/*.java" />
+			<fileset dir="${build.path}/integration/atpService/src" includes="**/*.java" />
+			<fileset dir="${build.path}/integration/common/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/core/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/atp/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/pricing/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/quote/order/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/quote/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/purchase/src" includes="**/*.java" />
+			<fileset dir="${build.path}/commerce/elop/src" includes="**/*.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*KairosChildCategoriesDerivation.java" />
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*DisabledChildCategoriesDerivation.java"/>
+			<fileset dir="${build.path}/catalog/src" includes="**/*.java" excludes="**/*CatalogRegionalDerivation.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryNodePropertyAccessor.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomConfigImportDocumentSubmitter.java"/>
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*CustomIndexingConfigImporter.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemPanel.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*PGBodyItemLink.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessorBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*SearchHistoryPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSCategoryMultiLanguagePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryCatalogAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryPathAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSCategoryRegionAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSWCSRenditionTextPropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*GenericPropertyAccessorHelperBase.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*TechSpecsRefinementMenuHandler.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*KAIROSGenerativePropertyAccessor.java" />
+			<fileset dir="${build.path}/endeca/src" includes="**/*.java" excludes="**/*EndecaCatalogRepositoryHelper.java" />
+			<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/" />
+			<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/" />	
+			<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/atp/beans/" />
+			<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/" />
+			<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/" />
+			<exclude name="${build.path}/experience/src/com/kairos/view/bean/" />
+		</cobertura-report>
+	</target>
+	
+	<path id="lib.classpath">
+		<fileset dir="./build_lib" includes="**/*.jar" />
+		<fileset dir="${dynamo.root.dir}/DAS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DPS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DSS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF/Endeca/Assembler/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF/Endeca/Index/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF/Endeca/Base/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF/Search/Index/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DAF/Search/Base/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DCS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/REST/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/experience/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/commerce/quote/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/commerce/purchase/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/commerce/elop/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/catalog/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/atp/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/atpService/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/order/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/orderTracker/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/orderHistory/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/pricing/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/KAIROS/integration/common/lib">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="../extlib/">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<!-- Define the SonarQube target -->
+	
+
+<target name="sonarqube">
+        <condition property="do.local">
+<not>
+<or>
+            <equals arg1="${branch}" arg2="true" />
+	    <equals arg1="${qualityBuild}" arg2="true" />
+</or>
+</not>
+        </condition>
+        <condition property="do.branch">
+	<and>
+            <equals arg1="${branch}" arg2="true" />
+	    <equals arg1="${localBuild}" arg2="true" />
+	</and>	
+        </condition>
+        <condition property="do.quality">
+	 <equals arg1="${qualityBuild}" arg2="true" />
+        </condition>
+    </target>
+
+<target name="-local" if="do.local">
+	<property file="${basedir}/sonar-dev.properties"/>
+        <echo>local html report </echo>
+    </target>
+
+    <target name="-branch" if="do.branch">
+        <property file="${basedir}/sonar-dev-dojo.properties"/>
+        <property name="sonar.branch" value="${sonar.branch}" />
+        <echo>Branch Report on Stash</echo>
+    </target>
+
+    <target name="-quality" if="do.quality">
+		<property file="${basedir}/build-quality.properties"/>
+		<property name="sonar.junit.reportsPath" value="${basedir}/../reports/junit/xml" />
+        <echo>Quality Analysis</echo>
+    </target>
+
+	
+	<!-- Must pass the Sonar Project Key and Prject Name -->
+		
+	<!-- Cobertura & Junit Properties -->
+	<property name="sonar.core.codeCoveragePlugin" value="cobertura" />
+	<property name="sonar.cobertura.reportPath" value="${basedir}/../reports/coverage/xml/coverage.xml" />
+
+	
+	<target name="sonar" unless="${disableSonar}" depends="-init,sonarqube,-local,-branch,-quality" >
+
+<echo>    </echo>
+<echo> Usage: If generating local html report please pass track name as paramter --->> ./sonar-DOJO-local.sh -Dtrack=Your track name as admin/bgs/commerce/mkt/usercom/custom
+</echo>
+<echo>    </echo>
+<echo>    </echo>
+<echo> Usage: If generating Branch report for review then pass following paramters (trackname and branchpath)
+ ./sonar-DOJO-branch.sh -Dtrack=Yourtrackname(admin/bgs/commerce/mkt/usercom/custom) -Dsonar.branch=Your branch path </echo>
+<echo>    </echo>
+<echo>    </echo>
+		<property name="sonar.projectBaseDir" value="${build.path}" />
+		<if name="track" value="commerce">
+        <echo>Analyzing commerce track files</echo>
+		<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="commerce/**/src"/>
+				<include name="integration/**/src"/>
+				<include name="orderHistory/**/src"/>
+				<include name="base/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="**/ClientInformationDroplet**"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+	</if>
+	<if name="track" value="admin">
+        <echo>Analyzing Admin track files</echo>
+		<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="administration/profile/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="**/ClientInformationDroplet**"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+				
+	</if>
+	<if name="track" value="bgs">
+        <echo>Analyzing BGS track files</echo>
+		<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="configurator/src"/>
+				<include name="catalog/src"/>
+				<include name="browse/src"/>
+				<include name="endeca/src"/>
+				<include name="experience/src"/>
+				<include name="siteManagement/src"/>
+				<include name="elastic/src"/>
+				<include name="integration/elastic/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="/configurator/src/com/kairos/configurator/bean/"/>
+				<exclude name="**/ClientInformationDroplet**"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+
+	</if>
+	<if name="track" value="search">
+        <echo>Analyzing Search files</echo>
+		<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="endeca/src"/>
+				<include name="elastic/src"/>
+				<include name="integration/elastic/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="/configurator/src/com/kairos/configurator/bean/"/>
+				<exclude name="**/ClientInformationDroplet**"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+
+	</if>
+	<if name="track" value="mkt">
+        <echo>Analyzing Marketing track files</echo>
+		<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="personalization/src/com"/>
+				<include name="personalization/history/src"/>
+				<include name="wcs/src"/>
+				<include name="mySupport/src"/>
+				<include name="softwaredownload/src"/>
+				<include name="mySupport/sroverview/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="**/ClientInformationDroplet**"/>
+				<exclude name="**/test/src"/>
+				<exclude name="/administration/profile/src/com/kairos/admin/bean/" />
+			<exclude name="/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/" />
+			<exclude name="/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/" />	
+			<exclude name="/endeca/src/com/kairos/endeca/bean/" />
+			<exclude name="/commerce/core/src/com/kairos/commerce/atp/beans/" />
+			<exclude name="/commerce/core/src/com/kairos/commerce/pricing/beans/" />
+			<exclude name="/administration/profile/src/com/kairos/userprofiling/menus/beans/" />
+			<exclude name="/experience/src/com/kairos/view/bean/" />
+				
+			</dirset>
+		</path>
+	</if>
+		<if name="track" value="usercom">
+        		<echo>Analyzing custom packages</echo>
+			<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="administration/profile/src/com/kairos/contacttopic"/>
+				<include name="administration/profile/src/com/kairos/servicetools"/>
+				<include name="personalization/src/com"/>
+				<include name="personalization/history/src"/>
+				<include name="wcs/src"/>
+				<include name="mySupport/src"/>
+				<include name="mySupport/sroverview/src"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+	</if>
+		<if name="track" value="custom">
+        		<echo>Analyzing custom packages</echo>
+			<path id="source.classpath">
+			<dirset dir="${build.path}">
+				<include name="administration/profile/src/com/kairos/contacttopic"/>
+				<include name="administration/profile/src/com/kairos/servicetools"/>
+				<exclude name="**/test/gensrc"/>
+				<exclude name="**/test/src"/>
+			</dirset>
+		</path>
+	</if>
+
+		
+		<path id="binaries.classpath">
+			<dirset dir="${build.path}">
+				<include name="**/classes/"/>
+			</dirset>
+			
+		</path>
+		<taskdef uri="antlib:org.sonar.ant" resource="org/sonar/ant/antlib.xml">
+			<!-- Update the following line, or put the "sonar-ant-task-*.jar" file in your "$HOME/.ant/lib" folder -->
+			<classpath path="./build_lib/sonar/sonar-ant-task-2.3.jar" />
+		</taskdef>
+
+	<pathconvert property="sonar.sources" pathsep="," refid="source.classpath" />
+	<pathconvert property="sonar.java.libraries" pathsep="," refid="lib.classpath" />
+	<pathconvert property="sonar.java.binaries" pathsep="," refid="binaries.classpath" />
+
+    <!-- Execute the SonarQube analysis -->
+	<sonar:sonar >
+	</sonar:sonar>
+
+	</target>
+
+		
+</project>

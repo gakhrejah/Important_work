@@ -1,0 +1,1 @@
+alter table sk_order drop column saved_date;

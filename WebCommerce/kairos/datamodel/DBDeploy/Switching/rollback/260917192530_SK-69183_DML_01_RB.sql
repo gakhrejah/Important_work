@@ -1,0 +1,1 @@
+alter table SK_OUTPUTMOTIF drop(disable);

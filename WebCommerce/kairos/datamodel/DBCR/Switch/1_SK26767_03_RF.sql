@@ -1,0 +1,1 @@
+alter table sk_product add master_cat varchar2(40);

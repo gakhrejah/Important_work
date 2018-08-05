@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CommonReference" basedir=".">
+	
+	<path id="spock.classpath">
+		<fileset dir="${buildDirectory}/build_lib/groovy">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${buildDirectory}/build_lib/groovy">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${buildDirectory}/build_lib/spock">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${buildDirectory}/build_lib/junit">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<path id="cobertura.classpath">
+		<fileset dir="${buildDirectory}/build_lib/cobertura">
+			<include name="*.jar" />
+			<include name="lib/**/*.jar" />
+		</fileset>
+	</path>
+	
+	<path id="module.classpath">
+		<fileset dir="${basedir}/lib/">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<path id="extlib.classpath">
+		<fileset dir="${buildDirectory}/../extlib/">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${dynamo.root.dir}/DSS/lib">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	
+	<taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="spock.classpath" />
+	<taskdef name="generatestubs" classname="org.codehaus.groovy.ant.GenerateStubsTask" classpathref="spock.classpath" />
+	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+	
+	<target name="compile-test" unless="${disableUnitTest}" description="Compile groovy files" >
+		<delete dir="test/classes" />
+		<mkdir dir="test/classes" />
+		<mkdir dir="test/src" />
+		<groovyc srcdir="test/src" destdir="test/classes">
+			<classpath>
+				<path refid="spock.classpath"/>
+				<path refid="dynamo.classpath" />
+				<path refid="extlib.classpath" />
+				<path refid="cobertura.classpath" />
+				<pathelement path="classes"/>
+			</classpath>
+		</groovyc>
+		
+	</target>
+	
+	<target name="generate-stub" unless="${disableUnitTest}" description="Compile groovy files" >
+		<if name="localBuild" value="true">
+			<else>
+				<generatestubs srcdir="test/src" destdir="${build.path}/test/gensrc" />
+			</else>
+		</if>
+	</target>
+	
+	<target name="run-test" unless="${disableUnitTest}" description="Run Spock Test" depends="instrument" >
+		<if name="localBuild" value="true">
+			<property name="failJunit" value="true" />
+			<property name="junitThread" value="2" />
+			<else>
+				<property name="failJunit" value="false" />
+				<property name="junitThread" value="2" />
+			</else>
+		</if>
+		<junit fork="yes" haltonfailure="${failJunit}" haltonerror="${failJunit}" threads="${junitThread}">
+			<sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura.path}/cobertura.ser" />
+			<classpath>
+				<path refid="spock.classpath"/>
+				<path refid="dynamo.classpath" />
+				<pathelement path="instrumented"/>
+				<pathelement path="test/classes"/>
+				<pathelement path="test/resources"/>
+				<path refid="cobertura.classpath" />
+				<path refid="extlib.classpath" />
+				<pathelement path="classes"/>
+			</classpath> 
+			<formatter type="brief" usefile="false"/>
+			<formatter type="xml" />			
+			<batchtest todir="${buildDirectory}/../reports/junit/xml">
+				<fileset dir="test/classes" >
+					<include name="**/*Test*.class"/>
+					<exclude name="**/*feature*closure*.class"/>
+					<exclude name="**/**$**.class"/>
+					<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/*.class" />
+					<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/*.class" />
+					<exclude name= "${buildDirectory}/catalog/src/KairosChildCategoriesDerivation.class"/>
+					<exclude name= "${buildDirectory}/catalog/src/DisabledChildCategoriesDerivation.class"/>
+					<exclude name= "${buildDirectory}/catalog/src/CatalogRegionalDerivation.class"/>
+					<exclude name= "${buildDirectory}/catalog/src/KAIROSCategoryNodePropertyAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>				
+				    <exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/CustomIndexingConfigImporter.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/PGBodyItemPanel.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/PGBodyItemLink.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessorBase.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/SearchHistoryPropertyAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/KAIROSCategoryMultiLanguagePropertyAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/GenericPropertyAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryCatalogAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryPathAccessor.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>
+					<exclude name= "${buildDirectory}/commerce/core/src/com/kairos/commerce/pricing/beans/*.class"/>
+					<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>
+					<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/" />
+					<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/*.class" />
+					<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/*.class" />	
+					<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+					<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/*.class" />
+					<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/*.class" />
+					<exclude name="${build.path}/experience/src/com/kairos/view/bean/*.class" />
+					<exclude name="**/orderHistory/src/com/kairos/commerce/orderhistory/**/*.class"/>
+					<exclude name="**/purchase/src/com/kairos/commerce/order/tracker/OrderTrackAndTraceFormHandler.class"/>
+					<exclude name="**/orderTracker/src/com/kairos/commerce/order/tracker/**/*.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+	
+	<target name="instrument" unless="${disableUnitTest}">
+		<delete dir="instrumented" />
+		<mkdir dir="instrumented" />
+		<echo message="instrumentation Cobertura Path : ${cobertura.path}/cobertura.ser" />
+		<!-- Instrument the application classes, writing the instrumented classes -->
+		<cobertura-instrument datafile="${cobertura.path}/cobertura.ser" todir="instrumented" ignoreTrivial="true">
+		
+			<ignore regex="org.slf4j.*" />
+			<auxClasspath>
+									<path refid="dynamo.classpath" />
+									<path refid="module.classpath" />
+									<path refid="extlib.classpath" />
+
+							</auxClasspath>
+			<fileset dir="classes">
+				<!-- Instrument all the application classes, but don't instrument the test classes. -->
+				<include name="**/*.class" />
+				<exclude name="**/*Test.class" />
+				<exclude name="**/*VO.class" />
+				<exclude name="**/*Bean.class" />
+				<exclude name="**/*Exception.class" />
+				<exclude name="**/*Constants.class" />
+				<exclude name="**/*Constant.class" />
+				<exclude name="**/*ErrorCodes.class" />
+				<exclude name="**/quote/beans/**.class" />
+				<exclude name="**/*DTO.class" />
+				<exclude name="**/*States.class" />
+				<exclude name="**/order/tracker/**/**.class" />
+				<exclude name="**/orderhistory/**/**.class" />
+				<exclude name="**/acerequest/bean/**.class" />
+				<exclude name="**/aceresponse/bean/**.class" />
+				<exclude name="**/pricing/beans/**.class" />				
+				
+				<exclude name="${buildDirectory}/administration/profile/src/com/kairos/admin/bean/**.class" />
+				<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/*.class" />
+				<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/*.class" />
+				<exclude name= "${buildDirectory}/catalog/src/KairosChildCategoriesDerivation.class"/>
+				<exclude name= "${buildDirectory}/catalog/src/DisabledChildCategoriesDerivation.class"/>
+				<exclude name= "${buildDirectory}/catalog/src/CatalogRegionalDerivation.class"/>
+				<exclude name= "${buildDirectory}/catalog/src/KAIROSCategoryNodePropertyAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>				
+				<exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/CustomIndexingConfigImporter.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/PGBodyItemPanel.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/PGBodyItemLink.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessorBase.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/SearchHistoryPropertyAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/KAIROSCategoryMultiLanguagePropertyAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/GenericPropertyAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryCatalogAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryPathAccessor.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>
+				<exclude name= "${buildDirectory}/commerce/core/src/com/kairos/commerce/pricing/beans/*.class"/>
+				<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>
+				<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/*.class" />
+				<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/*.class" />
+				<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/*.class" />	
+				<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+				<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/*.class" />
+				<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/*.class" />
+				<exclude name="${build.path}/experience/src/com/kairos/view/bean/" />	
+				<exclude name="**/orderHistory/src/com/kairos/commerce/orderhistory/**/**.class"/>
+				<exclude name="**/order/tracker/OrderTrackAndTraceFormHandler.class"/>
+				<exclude name="**/orderTracker/src/com/kairos/commerce/order/tracker/**/**.class"/>
+			</fileset>
+		</cobertura-instrument>
+	</target>
+	<!-- This target is added to created a EAR with instrument classes. This is related to selenium test code coverage -->
+	<target name="instrument-classes">
+		<delete dir="instrumented" />
+		<mkdir dir="instrumented" />
+		<echo message="instrumentation Cobertura Path : ${cobertura.path}/cobertura.ser" />
+		<!-- Instrument the application classes, writing the instrumented classes -->
+		<cobertura-instrument datafile="${cobertura.path}/cobertura.ser" todir="classes" ignoreTrivial="true">
+				<ignore regex="org.slf4j.*" />
+				<auxClasspath>
+						<path refid="dynamo.classpath" />
+						<path refid="module.classpath" />
+						<path refid="extlib.classpath" />
+
+				</auxClasspath>
+				<fileset dir="classes">
+						<!-- Instrument all the application classes, but don't instrument the test classes. -->
+						<include name="**/*.class" />
+						<exclude name="**/*Test.class" />
+						<exclude name="**/*VO.class" />
+						<exclude name="**/*Bean.class" />
+						<exclude name="**/*Exception.class" />
+						<exclude name="**/*Constants.class" />
+						<exclude name="**/*Constant.class" />
+						<exclude name="**/*ErrorCodes.class" />
+						<exclude name="**/quote/beans/**.class" />
+						<exclude name="**/*DTO.class" />
+						<exclude name="**/*States.class" />
+						<exclude name="${buildDirectory}/administration/profile/src/com/kairos/admin/bean/**.class" />
+						<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/*.class" />
+						<exclude name="${buildDirectory}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/*.class" />
+						<exclude name= "${buildDirectory}/catalog/src/KairosChildCategoriesDerivation.class"/>
+						<exclude name= "${buildDirectory}/catalog/src/DisabledChildCategoriesDerivation.class"/>
+						<exclude name= "${buildDirectory}/catalog/src/CatalogRegionalDerivation.class"/>
+						<exclude name= "${buildDirectory}/catalog/src/KAIROSCategoryNodePropertyAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>				
+						<exclude name= "${buildDirectory}/endeca/src/CustomConfigImportDocumentSubmitter.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/CustomIndexingConfigImporter.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/PGBodyItemPanel.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/PGBodyItemLink.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessorBase.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/SearchHistoryPropertyAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/KAIROSCategoryMultiLanguagePropertyAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/GenericPropertyAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/TechSpecsGenerativePropertyAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryCatalogAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/KAIROSWCSCategoryPathAccessor.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>	
+						<exclude name= "${buildDirectory}/commerce/core/src/com/kairos/commerce/pricing/beans/*.class"/>
+						<exclude name= "${buildDirectory}/endeca/src/EndecaCatalogRepositoryHelper.class"/>
+						<exclude name="${build.path}/administration/profile/src/com/kairos/admin/bean/" />
+						<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/acerequest/bean/" />
+						<exclude name="${build.path}/integration/atpCalculationEngine/src/com/kairos/atpservice/aceresponse/bean/" />	
+						<exclude name="${build.path}/endeca/src/com/kairos/endeca/bean/" />
+						<exclude name="${build.path}/commerce/core/src/com/kairos/commerce/pricing/beans/" />
+						<exclude name="${build.path}/administration/profile/src/com/kairos/userprofiling/menus/beans/" />
+						<exclude name="${build.path}/experience/src/com/kairos/view/bean/" />
+				</fileset>
+		</cobertura-instrument>
+	</target>
+
+	
+	<target name="copy" description="copy all files from src">
+		<copy todir="classes">
+			<fileset dir="src" excludes="**/*.java" />
+
+		</copy>
+	</target>
+	
+	<target name="compile">
+		<delete dir="${basedir}/classes" />
+		<mkdir dir="${basedir}/classes" />
+		<javac srcdir="src" destdir="classes" fork="yes" debug="true"
+			debuglevel="vars,lines,source">
+			<classpath refid="dynamo.classpath" />
+			<classpath refid="module.classpath" />
+			<classpath refid="extlib.classpath" />
+		</javac>
+		
+		<if name="basedir" value="${dynamo.root.dir}/${module.name}/base" >
+			<echo message="RMI classes compilation...."/>	
+			<rmic classname="com.kairos.framework.rmi.RemoteATGCacheContainer" base="${basedir}/classes">
+				<classpath refid="dynamo.classpath" />
+				<classpath refid="module.classpath" />
+				<classpath refid="extlib.classpath" />
+			</rmic>
+		</if>
+		
+	</target>
+	
+	<target name="clean">
+		<delete dir="${basedir}/classes/com" />
+		<delete dir="${basedir}/test/classes/com" />
+	</target>
+	
+	<target name="coverage" depends="compile-test,generate-stub, run-test" description="instrument ourself, run the tests and generate JUnit and coverage xml."/>
+	<target name="build" >
+		<if name="Instrumented" value="true">
+				<antcall target="build-instrument"></antcall>
+			<else>
+				<antcall target="build-alt"></antcall>
+			</else>
+		</if>
+	</target>
+	<target name="build-alt" depends="clean,compile,copy,coverage" />
+	<target name="build-instrument" depends="clean,compile,copy,coverage,instrument-classes,copy" />
+	
+	<!-- Target added to run junit locally -->
+	<target name="run-junit-local" depends="clean,compile,copy,run-test,coverage">
+	<property name="localbuild" value="true"/>
+	</target>
+	
+</project>

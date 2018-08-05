@@ -1,0 +1,9 @@
+GRANT SELECT ON SMS_ATG_SWITCH_A.dcs_category TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.DCS_CAT_CHLDCAT TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.SK_CAT_LANGUAGE_INFO TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.sk_Cat_language TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.sk_prd_language TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.sk_prd_language_info TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.sk_category TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.dcs_product TO sms_atg_core;
+GRANT SELECT ON SMS_ATG_SWITCH_A.sk_product TO sms_atg_core;

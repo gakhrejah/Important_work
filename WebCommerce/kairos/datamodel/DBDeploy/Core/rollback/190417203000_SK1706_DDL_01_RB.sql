@@ -1,0 +1,1 @@
+drop TABLE "sk_punchOutFieldsMappings";

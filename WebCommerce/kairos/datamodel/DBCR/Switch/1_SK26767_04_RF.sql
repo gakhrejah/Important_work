@@ -1,0 +1,1 @@
+ alter table sk_category add  classification_version varchar2(40);

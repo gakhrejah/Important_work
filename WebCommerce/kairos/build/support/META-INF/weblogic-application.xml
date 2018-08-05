@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+ <weblogic-application xmlns="http://xmlns.oracle.com/weblogic/weblogic-application"  
+   
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+            xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-application http://xmlns.oracle.com/weblogic/weblogic-application/1.4/weblogic-application.xsd">  
+
+
+       <prefer-application-packages>
+        <!-- jersey-bundle-*.jar -->
+        <package-name>com.sun.jersey.*</package-name>
+        <package-name>com.sun.research.ws.wadl.*</package-name>
+        <package-name>com.sun.ws.rs.ext.*</package-name>
+
+	<!-- Joda-*.jar  -->
+	<package-name>org.joda.*</package-name>
+
+        <!-- Jackson-*.jar -->
+        <package-name>org.codehaus.jackson.*</package-name>
+ 
+        <!-- jettison-*.jar -->
+        <package-name>org.codehaus.jettison.*</package-name>
+ 
+        <!-- jsr311*.jar -->
+        <package-name>javax.ws.rs.*</package-name>
+ 
+        <!-- asm.jar -->
+        <package-name>org.objectweb.asm.*</package-name>
+
+        <!-- com.oracle.webservices.orawsdl-api_12.1.2.jar -->
+	<package-name>javax.wsdl.factory.*</package-name>
+
+        <!-- com.oracle.webservices.orawsdl-api_12.1.2.jar -->
+	<package-name>oracle.j2ee.ws.wsdl.factory.*</package-name>
+
+        <!-- com.oracle.webservices.orawsdl-api_12.1.2.jar -->
+	<package-name>oracle.webservices.wsdl.*</package-name>
+	<package-name>com.google.*</package-name>
+    </prefer-application-packages>  
+ </weblogic-application>  

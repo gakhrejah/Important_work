@@ -1,0 +1,1 @@
+/app/apache-ant/bin/ant -f ../build_weblogic.xml -Dservername=pub build deploy-ear-to-weblogic $*

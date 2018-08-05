@@ -1,0 +1,12 @@
+/***
+*** Requester Name:  	Neha Mishra
+*** Purpose :		SK-56390
+*** Schema  :		atgcore
+*** Date of Request : 	JUL 20, 2017
+***/
+
+UPDATE SK_ORG_PROPERTY SET ALLOW_MODIFY_AT_REGION = 0 WHERE Not(ALLOW_MODIFY_AT_REGION = '1') OR ALLOW_MODIFY_AT_REGION IS NULL;
+
+UPDATE SK_ORG_PROPERTY SET USE_SYS_SETTG = 0 WHERE Not(USE_SYS_SETTG = '1') OR USE_SYS_SETTG IS NULL;
+
+commit;

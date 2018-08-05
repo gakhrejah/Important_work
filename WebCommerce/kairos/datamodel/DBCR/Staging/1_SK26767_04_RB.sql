@@ -1,0 +1,1 @@
+alter table sk_category drop column classification_version;

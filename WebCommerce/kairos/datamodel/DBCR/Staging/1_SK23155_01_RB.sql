@@ -1,0 +1,1 @@
+drop table sk_approval_agency_info;
